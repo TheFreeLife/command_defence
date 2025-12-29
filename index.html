@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>커맨드 디펜스 (Command Defence)</title>
+    <link rel="stylesheet" href="./src/style.css">
+</head>
+
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="ui-layer">
+            <div id="top-bar" class="glass-panel">
+                <div class="stat-item">웨이브: <span id="wave-count">1</span></div>
+                <div class="stat-item">기지 체력: <span id="base-hp">1000</span></div>
+                <div class="stat-item">자원: <span id="resource-gold">100</span></div>
+            </div>
+
+            <div id="top-right-area">
+                <div id="minimap-container" class="glass-panel">
+                    <canvas id="minimapCanvas"></canvas>
+                </div>
+            </div>
+
+            <div id="right-panel" class="glass-panel">
+                <div class="panel-header">방어 타워</div>
+                <div class="build-grid">
+                    <button class="build-btn" data-type="turret-basic" title="기본 포탑 (50)"
+                        data-info="HP: 100 | 데미지: 15 | 속도: 1.0s">
+                        <div class="btn-icon blue"></div>
+                        <span>기본</span>
+                    </button>
+                    <button class="build-btn" data-type="turret-fast" title="속사 포탑 (80)"
+                        data-info="HP: 100 | 데미지: 5 | 속도: 0.4s">
+                        <div class="btn-icon green"></div>
+                        <span>속사</span>
+                    </button>
+                    <button class="build-btn" data-type="turret-sniper" title="저격 포탑 (120)"
+                        data-info="HP: 100 | 데미지: 60 | 속도: 3.0s">
+                        <div class="btn-icon red"></div>
+                        <span>저격</span>
+                    </button>
+                    <button class="build-btn" data-type="generator" title="발전기 (150)"
+                        data-info="HP: 80 | 범위: 3x3 | 자동 충전">
+                        <div class="btn-icon yellow"></div>
+                        <span>발전기</span>
+                    </button>
+                    <!-- 남은 5칸은 추후 확장 가능 -->
+                    <div class="build-btn locked"></div>
+                    <div class="build-btn locked"></div>
+                    <div class="build-btn locked"></div>
+                    <div class="build-btn locked"></div>
+                    <div class="build-btn locked"></div>
+                </div>
+                <div class="mode-info">ESC: 취소</div>
+            </div>
+
+            <div id="upgrade-modal" class="modal-overlay hidden">
+                <div class="modal-content glass-panel">
+                    <h2>업그레이드 선택</h2>
+                    <div id="upgrade-cards" class="card-container">
+                        <!-- 업그레이드 카드가 동적으로 생성됩니다 -->
+                    </div>
+                </div>
+            </div>
+
+            <div id="wave-notice" class="modal-overlay hidden">
+                <h1 class="wave-text">웨이브 시작</h1>
+            </div>
+
+            <div id="game-over-modal" class="modal-overlay hidden">
+                <div class="modal-content glass-panel">
+                    <h1>게임 오버</h1>
+                    <p>당신의 기지가 파괴되었습니다.</p>
+                    <button id="restart-btn">다시 시작</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="./src/main.js"></script>
+</body>
+
+</html>
