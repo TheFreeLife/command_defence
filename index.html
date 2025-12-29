@@ -27,34 +27,11 @@
 
             <div id="right-panel" class="glass-panel">
                 <div class="panel-header">방어 타워</div>
-                <div class="build-grid">
-                    <button class="build-btn" data-type="turret-basic" title="기본 포탑 (50)"
-                        data-info="HP: 100 | 데미지: 15 | 속도: 1.0s">
-                        <div class="btn-icon blue"></div>
-                        <span>기본</span>
-                    </button>
-                    <button class="build-btn" data-type="turret-fast" title="속사 포탑 (80)"
-                        data-info="HP: 100 | 데미지: 5 | 속도: 0.4s">
-                        <div class="btn-icon green"></div>
-                        <span>속사</span>
-                    </button>
-                    <button class="build-btn" data-type="turret-sniper" title="저격 포탑 (120)"
-                        data-info="HP: 100 | 데미지: 60 | 속도: 3.0s">
-                        <div class="btn-icon red"></div>
-                        <span>저격</span>
-                    </button>
-                    <button class="build-btn" data-type="generator" title="발전기 (150)"
-                        data-info="HP: 80 | 범위: 3x3 | 자동 충전">
-                        <div class="btn-icon yellow"></div>
-                        <span>발전기</span>
-                    </button>
-                    <!-- 남은 5칸은 추후 확장 가능 -->
-                    <div class="build-btn locked"></div>
-                    <div class="build-btn locked"></div>
-                    <div class="build-btn locked"></div>
-                    <div class="build-btn locked"></div>
-                    <div class="build-btn locked"></div>
+                <div class="build-grid" id="build-grid">
+                    <!-- Buttons will be injected by GameEngine.js -->
                 </div>
+                <div class="mode-info">ESC: 취소</div>
+            </div>
                 <div class="mode-info">ESC: 취소</div>
             </div>
 
