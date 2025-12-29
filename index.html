@@ -14,9 +14,41 @@
 
         <div id="ui-layer">
             <div id="top-bar" class="glass-panel">
-                <div class="stat-item">웨이브: <span id="wave-count">1</span></div>
-                <div class="stat-item">기지 체력: <span id="base-hp">1000</span></div>
-                <div class="stat-item">자원: <span id="resource-gold">100</span></div>
+                <div class="stat-item wave">
+                    <span class="stat-icon">🌊</span>
+                    <span class="stat-label">웨이브</span>
+                    <span id="wave-count" class="stat-value">1</span>
+                </div>
+                <div class="stat-item hp">
+                    <span class="stat-icon">❤️</span>
+                    <span class="stat-label">기지 체력</span>
+                    <span id="base-hp" class="stat-value">1000</span>
+                </div>
+                <div class="stat-item gold">
+                    <span class="stat-icon">💰</span>
+                    <span class="stat-label">골드</span>
+                    <span id="resource-gold" class="stat-value">100</span>
+                </div>
+                <div class="stat-item oil">
+                    <span class="stat-icon">🛢️</span>
+                    <span class="stat-label">정제유</span>
+                    <span id="resource-oil" class="stat-value">0</span>
+                </div>
+            </div>
+
+            <div id="inventory-container">
+                <div id="inventory-bar" class="glass-panel">
+                    <div class="inventory-slot" data-index="0"></div>
+                    <div class="inventory-slot" data-index="1"></div>
+                    <div class="inventory-slot" data-index="2"></div>
+                    <div class="inventory-slot" data-index="3"></div>
+                    <div class="inventory-slot" data-index="4"></div>
+                    <div class="inventory-slot" data-index="5"></div>
+                </div>
+                <button id="roll-card-btn" class="glass-panel">
+                    <span class="roll-icon">🎲</span>
+                    <span class="roll-cost">100G</span>
+                </button>
             </div>
 
             <div id="top-right-area">
@@ -26,12 +58,11 @@
             </div>
 
             <div id="right-panel" class="glass-panel">
-                <div class="panel-header">방어 타워</div>
+                <div class="panel-header">건 설</div>
+                
                 <div class="build-grid" id="build-grid">
                     <!-- Buttons will be injected by GameEngine.js -->
                 </div>
-                <div class="mode-info">ESC: 취소</div>
-            </div>
                 <div class="mode-info">ESC: 취소</div>
             </div>
 
@@ -54,6 +85,11 @@
                     <p>당신의 기지가 파괴되었습니다.</p>
                     <button id="restart-btn">다시 시작</button>
                 </div>
+            </div>
+
+            <div id="ui-tooltip" class="glass-panel hidden">
+                <div class="tooltip-title"></div>
+                <div class="tooltip-desc"></div>
             </div>
         </div>
     </div>

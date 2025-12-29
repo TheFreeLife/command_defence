@@ -80,6 +80,10 @@ button,
     cursor: crosshair !important;
 }
 
+.sell-mode-cursor {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23ff3131" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 10 L30 30 M30 10 L10 30" stroke="%23ff3131" stroke-width="4"/><circle cx="20" cy="20" r="15" fill="none" stroke="%23ff3131" stroke-width="2"/></svg>'), cell !important;
+}
+
 
 canvas {
     background-color: #1a1c23;
@@ -111,16 +115,203 @@ canvas {
 }
 
 #top-bar {
+    position: absolute;
+    top: 20px;
+    left: 20px;
     display: flex;
-    gap: 30px;
-    padding: 15px 30px;
-    align-self: center;
+    flex-direction: column;
+    gap: 10px;
+    padding: 15px 20px;
+    align-self: flex-start;
+    min-width: 180px;
 }
 
 .stat-item {
-    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1rem;
     font-weight: 600;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.stat-icon {
+    font-size: 1.2rem;
+    width: 24px;
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    opacity: 0.7;
+    flex-grow: 1;
+}
+
+.stat-value {
+    font-size: 1.1rem;
+    font-family: 'Monaco', 'Consolas', monospace;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.stat-item.wave .stat-value { color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
+.stat-item.hp .stat-value { color: var(--neon-red); text-shadow: 0 0 10px var(--neon-red); }
+.stat-item.gold .stat-value { color: #ffd700; text-shadow: 0 0 10px #ffd700; }
+.stat-item.oil .stat-value { color: #9370DB; text-shadow: 0 0 10px #9370DB; }
+
+#inventory-container {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    display: flex;
+    align-items: flex-end;
+    gap: 15px;
+    pointer-events: none;
+}
+
+#inventory-bar {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    pointer-events: auto;
+}
+
+.inventory-slot {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.inventory-slot:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.inventory-slot.filled {
+    background: rgba(0, 210, 255, 0.1);
+    border-color: var(--neon-blue);
+    box-shadow: inset 0 0 10px rgba(0, 210, 255, 0.2);
+    cursor: pointer;
+}
+
+.inventory-slot.active {
+    background: rgba(0, 210, 255, 0.3);
+    border: 2px solid var(--neon-blue);
+    box-shadow: 0 0 15px rgba(0, 210, 255, 0.5);
+    transform: scale(1.05);
+}
+
+.inventory-item-icon {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: item-appear 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes item-appear {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+#roll-card-btn {
+    width: 70px;
+    height: 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    pointer-events: auto;
+    border-radius: 16px;
+    background: rgba(255, 215, 0, 0.1);
+    border-color: rgba(255, 215, 0, 0.2);
+}
+
+#roll-card-btn:hover {
+    background: rgba(255, 215, 0, 0.2);
+    transform: scale(1.05) translateY(-2px);
+    border-color: #ffd700;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+}
+
+#roll-card-btn:active {
+    transform: scale(0.95);
+}
+
+#roll-card-btn .roll-icon {
+    font-size: 1.8rem;
+}
+
+#roll-card-btn .roll-cost {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #ffd700;
+}
+
+#roll-card-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    filter: grayscale(1);
+    transform: none;
+}
+
+#ui-tooltip {
+    position: fixed;
+    pointer-events: none;
+    padding: 12px 16px;
+    z-index: 1000;
+    min-width: 150px;
+    max-width: 250px;
+    border-color: var(--neon-blue);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    transition: opacity 0.15s ease;
+}
+
+.tooltip-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--neon-blue);
+    margin-bottom: 4px;
+}
+
+.tooltip-desc {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: #ccc;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 2px;
+}
+
+.highlight {
+    color: #fff;
+    font-weight: 700;
+}
+
+.text-green { color: var(--neon-green); }
+.text-red { color: var(--neon-red); }
+
+.item-stats-box {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 #top-right-area {
@@ -147,7 +338,7 @@ canvas {
     position: absolute;
     right: 20px;
     bottom: 20px;
-    width: 260px;
+    width: 280px; /* 너비 확장 */
     padding: 15px;
     display: flex;
     flex-direction: column;
@@ -165,44 +356,44 @@ canvas {
 .build-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+    gap: 8px; /* 간격 축소 */
 }
-
-/* Controls Removed */
 
 .build-btn {
     position: relative;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--panel-border);
+    border: 2px solid transparent; /* 테두리 살짝 축소 */
     border-radius: 12px;
     aspect-ratio: 1/1;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 4px;
+    gap: 2px; /* 내부 요소 간격 축소 */
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     color: var(--text-color);
-    padding: 8px;
+    padding: 4px; /* 패딩 축소 */
+    box-sizing: border-box;
 }
 
 .build-btn:hover {
     background: rgba(255, 255, 255, 0.1);
-    border-color: var(--neon-blue);
+    border-color: rgba(0, 210, 255, 0.3);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
 .build-btn.active {
-    background: rgba(0, 210, 255, 0.2);
+    background: rgba(0, 210, 255, 0.25);
     border-color: var(--neon-blue);
-    box-shadow: 0 0 15px rgba(0, 210, 255, 0.3);
+    box-shadow: 0 0 20px rgba(0, 210, 255, 0.5), inset 0 0 10px rgba(0, 210, 255, 0.2);
+    z-index: 2;
 }
 
 .btn-icon {
-    width: 32px;
-    height: 32px;
+    width: 28px; /* 아이콘 크기 약간 축소 */
+    height: 28px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -223,6 +414,7 @@ canvas {
 .btn-icon.yellow { background: rgba(255, 255, 0, 0.2); box-shadow: 0 0 8px rgba(255, 255, 0, 0.2); }
 .btn-icon.orange { background: rgba(255, 102, 0, 0.2); box-shadow: 0 0 8px rgba(255, 102, 0, 0.2); }
 .btn-icon.purple { background: rgba(147, 112, 219, 0.2); box-shadow: 0 0 8px rgba(147, 112, 219, 0.2); }
+.btn-icon.cyan { background: rgba(0, 255, 204, 0.2); box-shadow: 0 0 8px rgba(0, 255, 204, 0.2); }
 
 .btn-info {
     display: flex;
@@ -253,33 +445,6 @@ canvas {
             transparent 5px,
             transparent 10px);
 }
-
-.btn-icon {
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
-}
-
-.btn-icon.blue {
-    background: var(--neon-blue);
-    box-shadow: 0 0 10px var(--neon-blue);
-}
-
-.btn-icon.green {
-    background: var(--neon-green);
-    box-shadow: 0 0 10px var(--neon-green);
-}
-
-.btn-icon.red {
-    background: var(--neon-red);
-    box-shadow: 0 0 10px var(--neon-red);
-}
-
-.btn-icon.yellow {
-    background: #ffff00;
-    box-shadow: 0 0 10px #ffff00;
-}
-
 
 .mode-info {
     font-size: 0.85rem;
