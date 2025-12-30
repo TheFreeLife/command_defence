@@ -278,8 +278,8 @@ export class PipeLine extends Entity {
                 const dy = other.y - this.y;
                 const distSq = dx * dx + dy * dy;
                 if (distSq > 30 * 30 && distSq < 50 * 50) {
-                    // Pipes connect to pipes, base, or refineries
-                    const pipeTransmitters = ['pipe-line', 'refinery', 'base'];
+                    // Pipes connect to pipes, base, refineries, or gold mines
+                    const pipeTransmitters = ['pipe-line', 'refinery', 'gold-mine', 'base'];
                     const isTransmitter = pipeTransmitters.includes(other.type) || (other.maxHp === 99999999);
                     if (isTransmitter) {
                         if (Math.abs(dx) < 5) {
@@ -292,28 +292,11 @@ export class PipeLine extends Entity {
             });
         }
 
-        const isPipe = (n) => n && n.type === 'pipe-line';
-        let pipeCount = 0;
-        if (isPipe(neighbors.n)) pipeCount++;
-        if (isPipe(neighbors.s)) pipeCount++;
-        if (isPipe(neighbors.e)) pipeCount++;
-        if (isPipe(neighbors.w)) pipeCount++;
-
-        const points = (dir) => {
-            if (isPipe(neighbors[dir])) return true;
-            if (pipeCount === 0) return true;
-            if (pipeCount === 1) {
-                if (isPipe(neighbors.n) || isPipe(neighbors.s)) return dir === 'n' || dir === 's';
-                if (isPipe(neighbors.e) || isPipe(neighbors.w)) return dir === 'e' || dir === 'w';
-            }
-            return isPipe(neighbors[dir]);
-        };
-
         const finalNeighbors = {
-            n: neighbors.n && points('n'),
-            s: neighbors.s && points('s'),
-            e: neighbors.e && points('e'),
-            w: neighbors.w && points('w')
+            n: !!neighbors.n,
+            s: !!neighbors.s,
+            e: !!neighbors.e,
+            w: !!neighbors.w
         };
 
         ctx.save();
@@ -589,7 +572,7 @@ export class PowerLine extends Entity {
                 const dy = other.y - this.y;
                 const distSq = dx * dx + dy * dy;
                 if (distSq > 30 * 30 && distSq < 50 * 50) {
-                    const transmitterTypes = ['power-line', 'generator', 'coal-generator', 'oil-generator', 'substation', 'base', 'airport', 'refinery'];
+                    const transmitterTypes = ['power-line', 'generator', 'coal-generator', 'oil-generator', 'substation', 'base', 'airport', 'refinery', 'gold-mine'];
                     const isTransmitter = transmitterTypes.includes(other.type) || (other.maxHp === 99999999);
                     if (isTransmitter) {
                         if (Math.abs(dx) < 5) {
@@ -602,28 +585,11 @@ export class PowerLine extends Entity {
             });
         }
 
-        const isWire = (n) => n && n.type === 'power-line';
-        let wireCount = 0;
-        if (isWire(neighbors.n)) wireCount++;
-        if (isWire(neighbors.s)) wireCount++;
-        if (isWire(neighbors.e)) wireCount++;
-        if (isWire(neighbors.w)) wireCount++;
-
-        const points = (dir) => {
-            if (isWire(neighbors[dir])) return true;
-            if (wireCount === 0) return true;
-            if (wireCount === 1) {
-                if (isWire(neighbors.n) || isWire(neighbors.s)) return dir === 'n' || dir === 's';
-                if (isWire(neighbors.e) || isWire(neighbors.w)) return dir === 'e' || dir === 'w';
-            }
-            return isWire(neighbors[dir]);
-        };
-
         const finalNeighbors = {
-            n: neighbors.n && points('n'),
-            s: neighbors.s && points('s'),
-            e: neighbors.e && points('e'),
-            w: neighbors.w && points('w')
+            n: !!neighbors.n,
+            s: !!neighbors.s,
+            e: !!neighbors.e,
+            w: !!neighbors.w
         };
 
         ctx.save();
@@ -715,6 +681,66 @@ export class Refinery extends Entity {
     }
 }
 
+export class GoldMine extends Entity {
+    constructor(x, y) {
+        super(x, y);
+        this.type = 'gold-mine';
+        this.size = 30;
+        this.maxHp = 250;
+        this.hp = 250;
+        this.maxFuel = 100; // 자원 매장량
+        this.fuel = 100;
+        this.productionRate = 8; // 초당 골드 생산량
+        this.color = '#FFD700';
+        this.isConnected = false;
+    }
+
+    update(deltaTime, engine) {
+        if (this.fuel > 0 && this.isConnected) {
+            this.fuel -= deltaTime / 1000;
+            if (this.fuel < 0) this.fuel = 0;
+            
+            // 골드 생산 (기지에 연결되었을 때만)
+            engine.resources.gold += (this.productionRate * deltaTime / 1000);
+        }
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.fillStyle = '#333';
+        ctx.fillRect(-15, -15, 30, 30);
+        ctx.strokeStyle = (this.fuel > 0) ? this.color : '#555';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-15, -15, 30, 30);
+        
+        // 채굴 기계 표현
+        ctx.fillStyle = '#666';
+        ctx.fillRect(-12, -8, 24, 16);
+        const drillAngle = (this.fuel > 0 && this.isConnected) ? (Date.now() / 100) : 0;
+        ctx.save();
+        ctx.rotate(drillAngle);
+        ctx.fillStyle = '#aaa';
+        ctx.beginPath();
+        ctx.moveTo(0, 0); ctx.lineTo(8, -4); ctx.lineTo(8, 4);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+
+        ctx.restore();
+
+        if (this.hp < this.maxHp) {
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.fillRect(this.x - 15, this.y - 35, 30, 3);
+            ctx.fillStyle = '#00ff00';
+            ctx.fillRect(this.x - 15, this.y - 35, (this.hp / this.maxHp) * 30, 3);
+        }
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(this.x - 15, this.y - 25, 30, 4);
+        ctx.fillStyle = '#FFD700';
+        ctx.fillRect(this.x - 15, this.y - 25, (this.fuel / this.maxFuel) * 30, 4);
+    }
+}
+
 export class Airport extends Entity {
     constructor(x, y) {
         super(x, y);
@@ -770,7 +796,7 @@ export class ScoutPlane extends Entity {
         this.speed = 5;
         this.angle = Math.atan2(targetY - startY, targetX - startX);
         this.arrived = false;
-        this.revealRadius = 8;
+        this.revealRadius = 20;
         this.alive = true;
         this.returning = false;
         this.homeX = startX;
@@ -856,7 +882,7 @@ export class Enemy extends Entity {
             blockedBy = base;
         } else {
             for (const obs of buildings) {
-                if (['ore', 'coal', 'oil', 'power-line'].includes(obs.type)) continue;
+                if (['ore', 'coal', 'oil', 'gold', 'power-line', 'pipe-line'].includes(obs.type)) continue;
                 if (obs === base) continue;
                 const dNext = Math.hypot(nextX - obs.x, nextY - obs.y);
                 const minDist = (this.size / 2) + (obs.size / 2) + 2;
@@ -944,6 +970,7 @@ export class Resource extends Entity {
         switch (this.type) {
             case 'coal': this.color = '#333333'; this.name = '석탄'; break;
             case 'oil': this.color = '#2F4F4F'; this.name = '석유'; break;
+            case 'gold': this.color = '#FFD700'; this.name = '금'; break;
             default: this.color = '#778899'; this.name = '자원'; break;
         }
     }

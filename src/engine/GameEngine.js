@@ -1,5 +1,5 @@
 import { TileMap } from '../map/TileMap.js';
-import { Base, Turret, Enemy, Projectile, Generator, Resource, CoalGenerator, OilGenerator, PowerLine, Substation, Wall, Airport, ScoutPlane, Refinery, PipeLine } from '../entities/Entities.js';
+import { Base, Turret, Enemy, Projectile, Generator, Resource, CoalGenerator, OilGenerator, PowerLine, Substation, Wall, Airport, ScoutPlane, Refinery, PipeLine, GoldMine } from '../entities/Entities.js';
 import { WaveManager, UpgradeManager } from '../systems/GameSystems.js';
 
 export class GameEngine {
@@ -12,7 +12,7 @@ export class GameEngine {
 
         this.resize();
 
-        this.entityClasses = { Base, Turret, Enemy, Projectile, Generator, CoalGenerator, OilGenerator, PowerLine, Substation, Wall, Airport, ScoutPlane, Refinery, PipeLine };
+        this.entityClasses = { Base, Turret, Enemy, Projectile, Generator, CoalGenerator, OilGenerator, PowerLine, Substation, Wall, Airport, ScoutPlane, Refinery, PipeLine, GoldMine };
         this.tileMap = new TileMap(this.canvas);
 
         const basePos = this.tileMap.gridToWorld(this.tileMap.centerX, this.tileMap.centerY);
@@ -26,6 +26,7 @@ export class GameEngine {
             walls: [],
             airports: [],
             refineries: [],
+            goldMines: [],
             pipeLines: [],
             scoutPlanes: [],
             resources: [],
@@ -43,6 +44,7 @@ export class GameEngine {
             'wall': 30,
             'airport': 500,
             'refinery': 300,
+            'gold-mine': 400,
             'coal-generator': 200,
             'oil-generator': 200
         };
@@ -95,12 +97,17 @@ export class GameEngine {
         this.minimapCanvas.height = 200;
     }
 
-    initResources() {
-        const resourceTypes = ['coal', 'oil'];
-        const numberOfVeins = 100; 
+        initResources() {
 
-        for (let i = 0; i < numberOfVeins; i++) {
-            let startX, startY;
+            const resourceTypes = ['coal', 'oil', 'gold'];
+
+            const numberOfVeins = 120; // Increased count to accommodate gold
+
+    
+
+            for (let i = 0; i < numberOfVeins; i++) {
+
+                let startX, startY;
             let validStart = false;
             let attempts = 0;
 
@@ -197,6 +204,7 @@ export class GameEngine {
             'coal-generator': `<div class="btn-icon orange"><svg viewBox="0 0 40 40"><rect x="10" y="20" width="20" height="15" fill="#333" stroke="#ff6600" stroke-width="2"/><rect x="22" y="10" width="6" height="12" fill="#333" stroke="#ff6600" stroke-width="2"/><circle cx="25" cy="8" r="3" fill="rgba(200,200,200,0.5)"/><circle cx="28" cy="4" r="4" fill="rgba(200,200,200,0.3)"/><path d="M15 28 Q20 20 25 28" stroke="#ff6600" stroke-width="2" fill="none"/></svg></div>`,
             'oil-generator': `<div class="btn-icon purple"><svg viewBox="0 0 40 40"><rect x="12" y="12" width="16" height="20" rx="3" fill="#333" stroke="#9370DB" stroke-width="2"/><path d="M12 16 L28 16" stroke="#9370DB" stroke-width="1"/><path d="M12 28 L28 28" stroke="#9370DB" stroke-width="1"/><circle cx="20" cy="12" r="4" fill="#333" stroke="#9370DB" stroke-width="2"/><path d="M8 20 L12 20" stroke="#9370DB" stroke-width="2"/></svg></div>`,
             'refinery': `<div class="btn-icon green"><svg viewBox="0 0 40 40"><rect x="8" y="10" width="10" height="25" fill="#333" stroke="#32cd32" stroke-width="2"/><rect x="22" y="10" width="10" height="25" fill="#333" stroke="#32cd32" stroke-width="2"/><path d="M18 20 H22" stroke="#32cd32" stroke-width="2"/><circle cx="20" cy="15" r="4" fill="#ffd700" opacity="0.8"/></svg></div>`,
+            'gold-mine': `<div class="btn-icon yellow"><svg viewBox="0 0 40 40"><rect x="10" y="20" width="20" height="15" fill="#333" stroke="#FFD700" stroke-width="2"/><path d="M15 20 L20 10 L25 20" fill="#FFD700" stroke="#FFD700" stroke-width="1"/><circle cx="20" cy="28" r="4" fill="#FFD700"/></svg></div>`,
             'substation': `<div class="btn-icon cyan"><svg viewBox="0 0 40 40"><rect x="10" y="10" width="20" height="20" fill="#333" stroke="#00ffcc" stroke-width="2"/><rect x="14" y="14" width="12" height="12" fill="#00ffcc" opacity="0.5"/><rect x="17" y="6" width="6" height="4" fill="#666"/></svg></div>`,
             'airport': `<div class="btn-icon"><svg viewBox="0 0 40 40"><rect x="5" y="15" width="30" height="15" fill="#444" stroke="#aaa" stroke-width="2"/><path d="M10 15 L20 5 L30 15" fill="#666" stroke="#aaa" stroke-width="2"/><rect x="18" y="20" width="4" height="10" fill="#fff" opacity="0.3"/></svg></div>`,
             'skill-scout': `<div class="btn-icon blue"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="15" fill="none" stroke="#00d2ff" stroke-width="2"/><path d="M20 10 V30 M10 20 H30" stroke="#00d2ff" stroke-width="1"/><circle cx="20" cy="20" r="5" fill="#00d2ff" opacity="0.5"/></svg></div>`,
@@ -215,6 +223,20 @@ export class GameEngine {
         const grid = document.getElementById('build-grid');
         grid.innerHTML = '';
         
+        // 패널 헤더 업데이트
+        const header = document.querySelector('.panel-header');
+        if (header) {
+            if (menuName === 'skills' && this.selectedAirport) {
+                header.textContent = '공항';
+            } else if (menuName === 'main') {
+                header.textContent = '건 설';
+            } else if (menuName === 'network') {
+                header.textContent = '네트워크';
+            } else if (menuName === 'power') {
+                header.textContent = '발전소';
+            }
+        }
+
         // Reset tooltip state when menu changes
         this.isHoveringUI = false;
         this.hideUITooltip();
@@ -223,37 +245,48 @@ export class GameEngine {
 
         const menus = {
             'main': [
-                { type: 'turret-basic', name: 'Basic', cost: 50 },
-                { type: 'category-network', name: 'Network', cost: null, action: 'menu:network' },
-                { type: 'substation', name: 'Station', cost: 100 },
-                { type: 'category-power', name: 'Plants', cost: null, action: 'menu:power' },
-                { type: 'wall', name: 'Wall', cost: 30 },
-                { type: 'airport', name: 'Airport', cost: 500 },
+                { type: 'turret-basic', name: '기본 포탑', cost: 50 },
+                { type: 'category-network', name: '네트워크', cost: null, action: 'menu:network' },
+                { type: 'substation', name: '변전소', cost: 100 },
+                { type: 'category-power', name: '발전소', cost: null, action: 'menu:power' },
+                { type: 'wall', name: '벽', cost: 30 },
+                { type: 'airport', name: '공항', cost: 500 },
                 null,
                 null,
-                { type: 'sell', name: 'Sell', cost: null, action: 'toggle:sell' }
+                { type: 'sell', name: '판매', cost: null, action: 'toggle:sell' }
             ],
             'network': [
-                { type: 'power-line', name: 'Wire', cost: 10 },
-                { type: 'pipe-line', name: 'Pipe', cost: 10 },
+                { type: 'power-line', name: '전선', cost: 10 },
+                { type: 'pipe-line', name: '파이프', cost: 10 },
                 null,
                 null,
                 null,
                 null,
-                { type: 'back', name: 'Back', cost: null, action: 'menu:main' },
+                { type: 'back', name: '뒤로', cost: null, action: 'menu:main' },
                 null,
-                { type: 'sell', name: 'Sell', cost: null, action: 'toggle:sell' }
+                { type: 'sell', name: '판매', cost: null, action: 'toggle:sell' }
             ],
             'power': [
-                { type: 'coal-generator', name: 'Coal', cost: 200 },
-                { type: 'oil-generator', name: 'Oil', cost: 200 },
-                { type: 'refinery', name: 'Refinery', cost: 300 },
+                { type: 'coal-generator', name: '석탄 발전', cost: 200 },
+                { type: 'oil-generator', name: '석유 발전', cost: 200 },
+                { type: 'refinery', name: '정제소', cost: 300 },
+                { type: 'gold-mine', name: '금 채굴장', cost: 400 },
+                null,
+                null,
+                { type: 'back', name: '뒤로', cost: null, action: 'menu:main' },
+                null,
+                { type: 'sell', name: '판매', cost: null, action: 'toggle:sell' }
+            ],
+            'skills': [
+                { type: 'skill-scout', name: '정찰', cost: 100, action: 'skill:scout' },
                 null,
                 null,
                 null,
-                { type: 'back', name: 'Back', cost: null, action: 'menu:main' },
                 null,
-                { type: 'sell', name: 'Sell', cost: null, action: 'toggle:sell' }
+                null,
+                { type: 'back', name: '뒤로', cost: null, action: 'menu:main' },
+                null,
+                null // 판매 버튼 제거
             ]
         };
 
@@ -306,8 +339,8 @@ export class GameEngine {
                 } else if (item.action === 'menu:skills') {
                     desc = '공항 건물을 통해 사용할 수 있는 특수 스킬 메뉴입니다.';
                 } else if (item.action === 'skill:scout') {
-                    desc = `<div class="stat-row"><span>💰 비용:</span> <span class="highlight">50G</span></div>
-                            <div class="item-stats-box">지정한 위치로 정찰기를 보내 영구적으로 안개를 제거합니다.</div>`;
+                    desc = `<div class="stat-row"><span>💰 비용:</span> <span class="highlight">100G</span></div>
+                            <div class="item-stats-box">지정한 위치로 정찰기를 보내 반경 20칸의 안개를 영구적으로 제거합니다.</div>`;
                 } else if (item.action === 'menu:main' || item.type === 'back') {
                     desc = '이전 메뉴로 돌아갑니다.';
                 } else if (item.action === 'toggle:sell') {
@@ -337,7 +370,9 @@ export class GameEngine {
                     } else if (item.type === 'oil-generator') {
                         desc += '<div class="item-stats-box">석유 매장지 위에 건설하여 전력을 생산합니다. (80초 가동)</div>';
                     } else if (item.type === 'refinery') {
-                        desc += '<div class="item-stats-box">석유를 정제하여 골드를 생산합니다. <br>(초당 5G, 80초 가동)</div>';
+                        desc += '<div class="item-stats-box">석유를 정제하여 정제유를 생산합니다. <br>(초당 5 유닛, 80초 가동)</div>';
+                    } else if (item.type === 'gold-mine') {
+                        desc += '<div class="item-stats-box">금 매장지 위에 건설하여 골드를 생산합니다. <br>(초당 8G, 100초 가동)</div>';
                     }
                 }
 
@@ -594,7 +629,7 @@ export class GameEngine {
     handleSkill(worldX, worldY) {
         if (!this.isSkillMode || !this.selectedSkill) return;
 
-        const cost = 50; // Scout cost
+        const cost = 100; // Scout cost
         if (this.resources.gold < cost) return;
 
         if (this.selectedSkill === 'scout') {
@@ -732,6 +767,20 @@ export class GameEngine {
             return;
         }
 
+        if (this.selectedBuildType === 'gold-mine') {
+            const resourceIndex = this.entities.resources.findIndex(r => {
+                return Math.abs(r.x - pos.x) < 5 && Math.abs(r.y - pos.y) < 5 && r.type === 'gold';
+            });
+            if (resourceIndex !== -1) {
+                this.entities.resources.splice(resourceIndex, 1);
+                const { GoldMine } = this.entityClasses;
+                this.entities.goldMines.push(new GoldMine(pos.x, pos.y));
+                tileInfo.tile.occupied = true;
+                this.resources.gold -= cost;
+            }
+            return;
+        }
+
         if (tileInfo.tile.buildable && !tileInfo.tile.occupied) {
             if (this.selectedBuildType === 'power-line') {
                 const { PowerLine } = this.entityClasses;
@@ -776,7 +825,7 @@ export class GameEngine {
         const pos = this.tileMap.gridToWorld(tileInfo.x, tileInfo.y);
         let foundEntity = null;
 
-        const lists = ['turrets', 'generators', 'powerLines', 'substations', 'walls', 'airports', 'refineries', 'pipeLines'];
+        const lists = ['turrets', 'generators', 'powerLines', 'substations', 'walls', 'airports', 'refineries', 'goldMines', 'pipeLines'];
         for (const name of lists) {
             const idx = this.entities[name].findIndex(e => Math.abs(e.x - pos.x) < 5 && Math.abs(e.y - pos.y) < 5);
             if (idx !== -1) {
@@ -1004,6 +1053,17 @@ export class GameEngine {
             }
             return true;
         });
+        this.entities.goldMines = this.entities.goldMines.filter(obj => {
+            obj.update(deltaTime, this);
+            if (obj.fuel <= 0 || obj.hp <= 0) {
+                const grid = this.tileMap.worldToGrid(obj.x, obj.y);
+                if (this.tileMap.grid[grid.y] && this.tileMap.grid[grid.y][grid.x]) {
+                    this.tileMap.grid[grid.y][grid.x].occupied = false;
+                }
+                return false;
+            }
+            return true;
+        });
 
         this.entities.scoutPlanes.forEach(p => p.update(deltaTime));
         this.entities.scoutPlanes = this.entities.scoutPlanes.filter(p => p.alive);
@@ -1015,7 +1075,7 @@ export class GameEngine {
             return enemy.active;
         });
 
-        const buildings = [...this.entities.turrets, ...this.entities.generators, ...this.entities.powerLines, ...this.entities.substations, ...this.entities.walls, ...this.entities.airports, ...this.entities.refineries, ...this.entities.pipeLines, ...this.entities.resources];
+        const buildings = [...this.entities.turrets, ...this.entities.generators, ...this.entities.powerLines, ...this.entities.substations, ...this.entities.walls, ...this.entities.airports, ...this.entities.refineries, ...this.entities.goldMines, ...this.entities.pipeLines, ...this.entities.resources];
         this.entities.enemies.forEach(enemy => enemy.update(deltaTime, this.entities.base, buildings));
         this.entities.turrets.forEach(turret => turret.update(deltaTime, this.entities.enemies, this.entities.projectiles));
         this.entities.projectiles = this.entities.projectiles.filter(p => p.active);
@@ -1055,6 +1115,7 @@ export class GameEngine {
             ...this.entities.walls,
             ...this.entities.airports,
             ...this.entities.refineries,
+            ...this.entities.goldMines,
             ...this.entities.pipeLines,
             this.entities.base
         ];
@@ -1067,6 +1128,7 @@ export class GameEngine {
         this.entities.walls.forEach(w => w.draw(this.ctx));
         this.entities.airports.forEach(a => a.draw(this.ctx));
         this.entities.refineries.forEach(ref => ref.draw(this.ctx));
+        this.entities.goldMines.forEach(gm => gm.draw(this.ctx));
         this.entities.generators.forEach(g => g.draw(this.ctx));
         this.entities.turrets.forEach(t => t.draw(this.ctx, this.isBuildMode));
         this.entities.enemies.forEach(e => e.draw(this.ctx));
@@ -1129,6 +1191,7 @@ export class GameEngine {
                     else if (this.selectedBuildType === 'substation') ghost = new Substation(pos.x, pos.y);
                     else if (this.selectedBuildType === 'wall') ghost = new Wall(pos.x, pos.y);
                     else if (this.selectedBuildType === 'refinery') ghost = new Refinery(pos.x, pos.y);
+                    else if (this.selectedBuildType === 'gold-mine') ghost = new GoldMine(pos.x, pos.y);
                     else if (this.selectedBuildType === 'coal-generator') ghost = new CoalGenerator(pos.x, pos.y);
                     else if (this.selectedBuildType === 'oil-generator') ghost = new OilGenerator(pos.x, pos.y);
                     if (ghost) ghost.draw(this.ctx);
@@ -1141,7 +1204,7 @@ export class GameEngine {
         if (this.isSkillMode && this.selectedSkill === 'scout') {
             this.ctx.save();
             this.ctx.beginPath();
-            const radius = 8 * this.tileMap.tileSize;
+            const radius = 20 * this.tileMap.tileSize;
             this.ctx.arc(mouseWorldX, mouseWorldY, radius, 0, Math.PI * 2);
             this.ctx.strokeStyle = 'rgba(0, 255, 204, 0.8)'; // More intense color
             this.ctx.setLineDash([10, 5]);
@@ -1242,6 +1305,24 @@ export class GameEngine {
                     <div class="stat-row"><span>❤️ 내구도:</span> <span class="highlight">${Math.ceil(hoveredLine.hp)}/${hoveredLine.maxHp}</span></div>`;
         }
 
+        // 7. Check Airport
+        const hoveredAirport = this.entities.airports.find(a => Math.abs(a.x - worldX) < 40 && Math.abs(a.y - worldY) < 60);
+        if (hoveredAirport) {
+            title = '공항';
+            desc = `<div class="stat-row"><span>✈️ 기능:</span> <span>특수 스킬 사용</span></div>
+                    <div class="stat-row"><span>❤️ 내구도:</span> <span class="highlight">${Math.ceil(hoveredAirport.hp)}/${hoveredAirport.maxHp}</span></div>
+                    <div class="stat-row"><span>💡 선택:</span> <span>좌클릭 시 스킬 메뉴</span></div>`;
+        }
+
+        // 8. Check Gold Mine
+        const hoveredGoldMine = this.entities.goldMines.find(gm => Math.hypot(gm.x - worldX, gm.y - worldY) < 15);
+        if (hoveredGoldMine) {
+            title = '금 채굴장';
+            desc = `<div class="stat-row"><span>⛽ 남은 자원:</span> <span class="highlight">${Math.ceil(hoveredGoldMine.fuel)}</span></div>
+                    <div class="stat-row"><span>❤️ 내구도:</span> <span class="highlight">${Math.ceil(hoveredGoldMine.hp)}/${hoveredGoldMine.maxHp}</span></div>
+                    <div class="stat-row"><span>🔌 연결 상태:</span> <span class="${hoveredGoldMine.isConnected ? 'text-green' : 'text-red'}">${hoveredGoldMine.isConnected ? '기지 연결됨' : '연결 안됨'}</span></div>`;
+        }
+
         if (title) {
             this.showUITooltip(title, desc, this.camera.mouseX, this.camera.mouseY);
         } else {
@@ -1263,9 +1344,19 @@ export class GameEngine {
         mCtx.translate(offsetX, offsetY);
         mCtx.scale(scale, scale);
         
-        // 1. Fill base background
-        mCtx.fillStyle = '#050505';
+        // 1. 전체 배경을 아주 어두운 색(안개)으로 채움
+        mCtx.fillStyle = '#0a0a0a';
         mCtx.fillRect(0, 0, mapWorldWidth, mapWorldHeight);
+
+        // 2. 밝혀진 타일의 바닥면을 먼저 그림
+        mCtx.fillStyle = '#1a1a1a';
+        for (let y = 0; y < this.tileMap.rows; y++) {
+            for (let x = 0; x < this.tileMap.cols; x++) {
+                if (this.tileMap.grid[y][x].visible) {
+                    mCtx.fillRect(x * 40, y * 40, 40, 40);
+                }
+            }
+        }
 
         // Helper to check if a world position is visible
         const isVisible = (worldX, worldY) => {
@@ -1273,7 +1364,7 @@ export class GameEngine {
             return this.tileMap.grid[g.y] && this.tileMap.grid[g.y][g.x] && this.tileMap.grid[g.y][g.x].visible;
         };
 
-        // 2. Draw only visible entities
+        // 3. 밝혀진 영역 내의 엔티티들만 그림
         const base = this.entities.base;
         if (isVisible(base.x, base.y)) {
             mCtx.fillStyle = '#00d2ff';
@@ -1315,6 +1406,11 @@ export class GameEngine {
             if (isVisible(ref.x, ref.y)) mCtx.fillRect(ref.x - 15, ref.y - 15, 30, 30);
         });
 
+        mCtx.fillStyle = '#FFD700'; 
+        this.entities.goldMines.forEach(gm => {
+            if (isVisible(gm.x, gm.y)) mCtx.fillRect(gm.x - 15, gm.y - 15, 30, 30);
+        });
+
         this.entities.resources.forEach(r => { 
             if (isVisible(r.x, r.y)) {
                 mCtx.fillStyle = r.color; 
@@ -1329,26 +1425,25 @@ export class GameEngine {
             }
         });
 
-        // 3. Draw fog mask on minimap (optional but good for consistency)
-        // Since we already check isVisible for entities, let's just make the background black and grid subtle
-        mCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-        mCtx.lineWidth = 2;
-        for (let y = 0; y < this.tileMap.rows; y+=2) {
-            for (let x = 0; x < this.tileMap.cols; x+=2) {
+        // 4. 격자선 (밝혀진 곳만 희미하게)
+        mCtx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+        mCtx.lineWidth = 1;
+        for (let y = 0; y < this.tileMap.rows; y+=5) {
+            for (let x = 0; x < this.tileMap.cols; x+=5) {
                 if (this.tileMap.grid[y][x].visible) {
-                    mCtx.strokeRect(x * 40, y * 40, 80, 80);
+                    mCtx.strokeRect(x * 40, y * 40, 200, 200);
                 }
             }
         }
 
-        // 4. Viewport rectangle
+        // 5. 뷰포트 사각형 (카메라 영역)
         const viewX = -this.camera.x / this.camera.zoom;
         const viewY = -this.camera.y / this.camera.zoom;
         const viewW = this.canvas.width / this.camera.zoom;
         const viewH = this.canvas.height / this.camera.zoom;
 
-        mCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-        mCtx.lineWidth = 20; 
+        mCtx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        mCtx.lineWidth = 15; 
         mCtx.strokeRect(viewX, viewY, viewW, viewH);
 
         mCtx.restore();
@@ -1358,6 +1453,7 @@ export class GameEngine {
         // 1. 초기화
         this.entities.pipeLines.forEach(p => p.isConnected = false);
         this.entities.refineries.forEach(r => r.isConnected = false);
+        this.entities.goldMines.forEach(gm => gm.isConnected = false);
 
         // 2. BFS 탐색 (기지에서 시작)
         const oilGrid = {};
@@ -1368,6 +1464,10 @@ export class GameEngine {
         this.entities.refineries.forEach(r => {
             const gp = this.tileMap.worldToGrid(r.x, r.y);
             oilGrid[`${gp.x},${gp.y}`] = r;
+        });
+        this.entities.goldMines.forEach(gm => {
+            const gp = this.tileMap.worldToGrid(gm.x, gm.y);
+            oilGrid[`${gp.x},${gp.y}`] = gm;
         });
 
         const queue = [];
@@ -1381,37 +1481,9 @@ export class GameEngine {
 
         while (queue.length > 0) {
             const curr = queue.shift();
-            const currEntity = oilGrid[`${curr.x},${curr.y}`] || (curr.x === baseGp.x && curr.y === baseGp.y ? this.entities.base : null);
+            const currKey = `${curr.x},${curr.y}`;
 
-            // 파이프라인 레드스톤 로직 (전선과 동일하게 나가는 방향만 허용)
-            let allowedDirs = [...dirs];
-            if (currEntity && currEntity.type === 'pipe-line') {
-                const neighbors = {
-                    n: oilGrid[`${curr.x},${curr.y-1}`],
-                    s: oilGrid[`${curr.x},${curr.y+1}`],
-                    e: oilGrid[`${curr.x+1},${curr.y}`],
-                    w: oilGrid[`${curr.x-1},${curr.y}`]
-                };
-                const isPipe = (n) => n && n.type === 'pipe-line';
-                let pipeCount = (isPipe(neighbors.n)?1:0) + (isPipe(neighbors.s)?1:0) + (isPipe(neighbors.e)?1:0) + (isPipe(neighbors.w)?1:0);
-                
-                const points = (dir) => {
-                    if (isPipe(neighbors[dir])) return true;
-                    if (pipeCount === 0) return true;
-                    if (pipeCount === 1) {
-                        if (isPipe(neighbors.n) || isPipe(neighbors.s)) return dir === 'n' || dir === 's';
-                        if (isPipe(neighbors.e) || isPipe(neighbors.w)) return dir === 'e' || dir === 'w';
-                    }
-                    return isPipe(neighbors[dir]);
-                };
-
-                allowedDirs = allowedDirs.filter(d => {
-                    let dirStr = d[1]==1?'s':d[1]==-1?'n':d[0]==1?'e':'w';
-                    return points(dirStr);
-                });
-            }
-
-            for (const dir of allowedDirs) {
+            for (const dir of dirs) {
                 const nx = curr.x + dir[0];
                 const ny = curr.y + dir[1];
                 const key = `${nx},${ny}`;
@@ -1463,47 +1535,8 @@ export class GameEngine {
         while (queue.length > 0) {
             const curr = queue.shift();
             const currKey = `${curr.x},${curr.y}`;
-            const currEntity = powerGrid[currKey];
 
-            let allowedDirs = [[0, 1], [0, -1], [1, 0], [-1, 0]];
-
-            // Redstone propagation logic for PowerLines
-            if (currEntity && currEntity.type === 'power-line') {
-                const neighbors = {
-                    n: powerGrid[`${curr.x},${curr.y-1}`],
-                    s: powerGrid[`${curr.x},${curr.y+1}`],
-                    e: powerGrid[`${curr.x+1},${curr.y}`],
-                    w: powerGrid[`${curr.x-1},${curr.y}`]
-                };
-
-                const isWire = (n) => n && n.type === 'power-line';
-                let wireCount = 0;
-                if (isWire(neighbors.n)) wireCount++;
-                if (isWire(neighbors.s)) wireCount++;
-                if (isWire(neighbors.e)) wireCount++;
-                if (isWire(neighbors.w)) wireCount++;
-
-                const points = (dir) => {
-                    if (isWire(neighbors[dir])) return true;
-                    if (wireCount === 0) return true;
-                    if (wireCount === 1) {
-                        if (isWire(neighbors.n) || isWire(neighbors.s)) return dir === 'n' || dir === 's';
-                        if (isWire(neighbors.e) || isWire(neighbors.w)) return dir === 'e' || dir === 'w';
-                    }
-                    return isWire(neighbors[dir]);
-                };
-
-                allowedDirs = allowedDirs.filter(d => {
-                    let dirStr = '';
-                    if (d[0] === 0 && d[1] === 1) dirStr = 's';
-                    else if (d[0] === 0 && d[1] === -1) dirStr = 'n';
-                    else if (d[0] === 1 && d[1] === 0) dirStr = 'e';
-                    else if (d[0] === -1 && d[1] === 0) dirStr = 'w';
-                    return points(dirStr);
-                });
-            }
-
-            for (const dir of allowedDirs) {
+            for (const dir of dirs) {
                 const nx = curr.x + dir[0];
                 const ny = curr.y + dir[1];
                 const key = `${nx},${ny}`;
